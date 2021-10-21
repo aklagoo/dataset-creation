@@ -36,7 +36,7 @@ def filter_text_english(img_alt: str, img_par: str) -> (bool, bool):
 
 def filter_sexual_content(img_path: str) -> bool:
     """Checks if an image contains sexual content"""
-    score = sexual_classifier.get_score('image.jpg')
+    score = sexual_classifier.get_score(img_path)
     if score > 0.5:
         return True
 
