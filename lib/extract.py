@@ -32,7 +32,7 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
     Args:
         warc_path: Path to the .warc file.
         warc_segment_id: .warc file's segment ID.
-        _samples: List of image data previously processed, if any.
+        samples: List of image data previously processed, if any.
         limit: Soft limits the number of image tags processed.
     Returns:
         images: List of image dictionaries with keys:
