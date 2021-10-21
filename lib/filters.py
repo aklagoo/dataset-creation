@@ -21,13 +21,12 @@ def filter_img_shape(img: ndarray) -> bool:
     return (h, w) >= config.FILTER_IMG_SIZE
 
 
-def filter_match_classes(classes: List[str], text: str) -> bool:
+def filter_match_classes(classes: List[str], img_alt: str, img_par: str) -> (bool, bool):
     """Checks if classes match the text."""
     # TODO Fill stub
-    return True
+    return True, True
 
 
 def filter_text_english(img_alt: str, img_par: str) -> (bool, bool):
     """Checks if alt-text and par-text contain at least some English words."""
-    # TODO Fill stub
     return True, True
