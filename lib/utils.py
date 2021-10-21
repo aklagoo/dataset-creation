@@ -6,7 +6,7 @@ from urllib.error import URLError
 import wget
 
 
-def download_urllib(url: str, file_path: str = None, dir_path: str = None, verbose: bool = False):
+def download_urllib(url: str, file_path: str = None, dir_path: str = None, verbose: bool = False) -> (bool, str):
     """Downloads file. Returns None on URLError.
 
     Args:
@@ -16,11 +16,10 @@ def download_urllib(url: str, file_path: str = None, dir_path: str = None, verbo
         verbose: Prints verbose status messages.
 
     Returns:
-        If file is downloaded successfully,
-            file_path: Path to the downloaded file.
-        Else,
-            None.
+        exists: True, if file exists.
+        file_path: Path to the downloaded file, if successful. Else, None.
     """
+    exists = False
     # Generate file name if path hasn't been provided
     filename = url.split('/')[-1]
     if not file_path:
@@ -33,7 +32,8 @@ def download_urllib(url: str, file_path: str = None, dir_path: str = None, verbo
     if os.path.exists(file_path):
         if verbose:
             print(f"[SKIP] '{filename}' already exists.")
-        return file_path
+            exists = True
+        return exists, file_path
 
     # Open connection and write to file
     try:
@@ -41,18 +41,30 @@ def download_urllib(url: str, file_path: str = None, dir_path: str = None, verbo
             file.write(response.read())
         if verbose:
             print(f"[SUCCESS] '{filename}' downloaded.")
-        return file_path
+        return exists, file_path
     except URLError:
         if verbose:
             print(f"[ERROR] Unable to download'{filename}'.")
-        return None
+        return exists, None
 
 
-def download_wget(url: str, dir_path: str = None, verbose: bool = False):
+def download_wget(url: str, dir_path: str = None, verbose: bool = False) -> (bool, str):
+    """Downloads a file via wget.
+
+    Args:
+        url: URL to the file.
+        dir_path: Path to output directory.
+        verbose: If set, prints a status output.
+
+    Returns:
+        exists: True, if file already exists.
+        filename: Path to the downloaded file.
+    """
     filename = url.split('/')[-1]
+    exists = False
     if not os.path.exists(filename):
         try:
-            wget.download(url.strip(), dir_path)
+            filename = wget.download(url.strip(), dir_path)
             if verbose:
                 print(f"[SUCCESS] '{filename}' downloaded.")
         except URLError or ValueError:
@@ -61,6 +73,9 @@ def download_wget(url: str, dir_path: str = None, verbose: bool = False):
     else:
         if verbose:
             print(f"[SKIP] {filename} already exists.")
+            exists = True
+
+    return exists, filename
 
 
 def export_csv(rows: List[dict], output_path: str):

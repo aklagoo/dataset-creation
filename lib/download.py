@@ -1,11 +1,14 @@
+from typing import List, Tuple
 import tempfile
 import gzip
 import os
 from lib import config, utils
 from lib.utils import download_wget
+import glob
+from numpy.random import choice
 
 
-def get_urls():
+def get_urls() -> List[Tuple[str, str]]:
     """Generates a list of URLs filtered by segments."""
     filtered_urls = []
 
@@ -21,16 +24,19 @@ def get_urls():
             with gzip.open(path_gz, 'r') as file_gz, open(config.SEGMENT_FILE_WARC, 'w') as file_warc:
                 for line in file_gz:
                     line = line.decode(encoding='utf-8').strip()
-                    if any(segment_id in line for segment_id in config.SEGMENT_IDS):
-                        url = config.SEGMENT_URL_DOMAIN + line
-                        filtered_urls.append(url.strip())
-                        file_warc.write(url + '\n')
+
+                    # Check if any segmentID is in the URL
+                    for segment_id in config.SEGMENT_IDS:
+                        if segment_id in line:
+                            url = config.SEGMENT_URL_DOMAIN + line.strip()
+                            filtered_urls.append((segment_id, url))
+                            file_warc.write(segment_id + ',' + url + '\n')
 
     # If warc.paths already exists, open and load.
     else:
         with open(config.SEGMENT_FILE_WARC, 'r') as file_warc:
             for line in file_warc:
-                filtered_urls.append(line.strip())
+                filtered_urls.append(tuple(line.strip().split(',')))
 
     return filtered_urls
 
@@ -46,8 +52,30 @@ def download_batch(first_n=-1):
     # Download segments.
     if first_n != -1:
         filtered_urls = filtered_urls[:first_n]
-    for url in filtered_urls:
+    for _, url in filtered_urls:
         download_wget(url, config.SEGMENT_DIR)
+
+
+def download_rand_new() -> (str, str):
+    """Downloads a single new WARC file.
+
+    This function randomly picks a WARC file until the file does not exist
+    locally. The missing file is downloaded.
+
+    Returns:
+        segment_id: Segment ID of the file.
+        file: Path to downloaded file.
+    """
+    filtered_urls = get_urls()
+    files_exist = [x.split('/')[-1] for x in glob.glob(config.SEGMENT_DIR)]
+
+    while True:
+        url = choice(filtered_urls)
+        segment_id = url[0]
+        file_name = url[1].split('/')[-1]
+        if file_name not in files_exist:
+            _, file = utils.download_wget(url, config.SEGMENT_DIR)
+            return segment_id, file
 
 
 if __name__ == '__main__':
