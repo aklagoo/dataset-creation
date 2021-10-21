@@ -3,10 +3,12 @@
 All methods return a boolean.
 """
 from nltk.tokenize import word_tokenize
-from lib import config
+from numpy.core.shape_base import block
+import config
 from numpy import ndarray
 from typing import List
-from open_nsfw_python3 import NSFWClassifier # pip install open_nsfw_python3
+from open_nsfw_python3 import NSFWClassifier # pip install open_nsfw_python3\
+import os
 
 sexual_classifier = NSFWClassifier()
 
@@ -39,5 +41,25 @@ def filter_sexual_content(img_path: str) -> bool:
     score = sexual_classifier.get_score(img_path)
     if score > 0.5:
         return True
+
+def generate_blacklist(blacklist_folder: str) -> dict:
+    """Generates a dictionary with all blacklisted domains"""
+    print("Collecting list of blacklisted domains")
+    blocked_list = []
+    for blacklist_file in os.listdir(blacklist_folder):
+        with open(os.path.join(blacklist_folder, blacklist_file)) as f:
+            lines = f.readlines()
+            for l in lines:
+                blocked_list.append(l[:-1])
+
+    return set(blocked_list)
+
+domain_blacklist = generate_blacklist("../blacklists")
+
+def filter_blacklisted_domains(domain: str) -> bool:
+    """Checks if a domain belongs to the list of blacklisted domains"""
+    if domain in domain_blacklist:
+        return True
+
 
 
