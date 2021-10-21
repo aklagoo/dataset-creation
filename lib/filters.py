@@ -9,6 +9,9 @@ from numpy import ndarray
 from typing import List
 
 
+dictionary = set(words.words())
+
+
 def filter_text_len(img_alt: str, img_par: str) -> (bool, bool):
     """Checks if length of alt-text and par-text is greater than the minimum length."""
     alt_len = len(word_tokenize(img_alt))
@@ -34,8 +37,6 @@ def filter_text_english(img_alt: str, img_par: str) -> (bool, bool):
     This method tokenizes both sentences and checks if there are at least some
     English words.
     """
-    dictionary = set(words.words())
-
     # Count English words
     alt_words = word_tokenize(img_alt)
     alt_count = sum([x in dictionary for x in alt_words])

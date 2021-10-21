@@ -2,9 +2,17 @@ from typing import List, Dict
 import cv2
 import torch
 import torchvision
-from torchvision import transforms as transforms
+from torchvision import transforms
 from lib.detect import _predict
 from lib.filters import filter_text_len, filter_text_english
+
+
+_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+_model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
+_model.eval().to(_device)
+_transform = transforms.Compose([
+    transforms.ToTensor(),
+])
 
 
 def filter_text(samples: List[dict]) -> List[dict]:
@@ -40,30 +48,22 @@ def filter_text(samples: List[dict]) -> List[dict]:
 
 def detect(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """Loads and tags images."""
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
-    model.eval().to(device)
-
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-    ])
-
     _samples = []
     for sample in samples:
         _sample = sample.copy()
 
         # Predict classes and bounding boxes for image
-        classes, labels, boxes = _predict(cv2.imread(_sample['img_path']), model, device, 0.8, transform)
+        classes, labels, boxes = _predict(cv2.imread(_sample['img_path']), _model, _device, 0.8, _transform)
         _sample['classes'] = ' '.join(list(set(classes)))
         _samples.append(_sample)
 
     return _samples
 
 
-def download(tags: List[dict]) -> List[dict]:
+def download(samples: List[dict]) -> List[dict]:
     """Downloads images for all tags. Discards tags with invalid URLs."""
     # TODO Fill stub
-    return tags
+    return samples
 
 
 def filter_img(tags: List[dict]) -> List[dict]:
