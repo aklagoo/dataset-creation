@@ -1,4 +1,4 @@
-from lib import download, extract, filters, utils, config
+from lib import download, extract, pipeline, utils, config
 import os
 
 
@@ -10,8 +10,8 @@ def process_random():
     samples = extract.extract(warc_path, segment_id)
 
     # Run all filters
-    for data_filter in filters.filters:
-        samples = data_filter(samples)
+    for process in pipeline.pipeline:
+        samples = process(samples)
 
     # Write to CSV
     csv_name = warc_path.split('/')[-1].split('.')[0] + '.csv'
