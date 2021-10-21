@@ -4,7 +4,7 @@ import torch
 import torchvision
 from torchvision import transforms
 from lib.detect import _predict
-from lib.filters import filter_text_len, filter_text_english
+from lib import filters
 from lib.utils import download_urllib
 import os
 from lib import config
@@ -29,7 +29,7 @@ def filter_text(samples: List[dict]) -> List[dict]:
         par = _sample['img_par']
 
         # Length check
-        alt_len, par_len = filter_text_len(alt, par)
+        alt_len, par_len = filters.filter_text_len(alt, par)
         if not alt_len and not par_len:
             continue
         else:
@@ -37,7 +37,7 @@ def filter_text(samples: List[dict]) -> List[dict]:
             _sample['FLAG_PAR_LEN'] = par_len
 
         # Language check
-        alt_en, par_en = filter_text_english(alt, par)
+        alt_en, par_en = filters.filter_text_english(alt, par)
         if not alt_en and not par_en:
             continue
         else:
@@ -70,14 +70,32 @@ def download(samples: List[dict]) -> List[dict]:
     return samples
 
 
-def detect(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
-    """Loads and tags images."""
+def detect_and_filter_img(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Detects and filters images."""
     _samples = []
     for sample in samples:
         _sample = sample.copy()
 
-        # Predict classes and bounding boxes for image
+        # Load and check image size
+        img = cv2.imread(_sample['img_path'])
+        if not filters.filter_img_shape(img):
+            continue
+
+        # Predict classes and boxes
         classes, labels, boxes = _predict(cv2.imread(_sample['img_path']), _model, _device, 0.8, _transform)
+        if len(classes) == 0:
+            continue
+
+        # Check if the alt-text and par-text match the classes
+        alt = _sample['img_alt']
+        par = _sample['img_par']
+        alt_match, par_match = filters.filter_match_classes(classes, alt, par)
+        if not alt_match and not par_match:
+            continue
+
+        # Append sample
+        _sample['FLAG_ALT_MATCH'] = alt_match
+        _sample['FLAG_PAR_MATCH'] = par_match
         _sample['classes'] = json.dumps(classes)
         _sample['boxes'] = json.dumps(boxes)
         _samples.append(_sample)
@@ -85,10 +103,4 @@ def detect(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
     return _samples
 
 
-def filter_img(tags: List[dict]) -> List[dict]:
-    """Checks if text matches classes. Discards tags otherwise."""
-    # TODO Fill stub
-    return tags
-
-
-pipeline = [filter_text, download, detect, filter_img]
+pipeline = [filter_text, download, detect_and_filter_img]
