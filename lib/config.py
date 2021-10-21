@@ -1,11 +1,20 @@
 """This module contains system-wide configuration constants."""
 SEGMENT_DIR = "../data/segments"
-SEGMENT_IDS = [
+
+SEGMENT_IDS_ARCHAN = [
     "1627046149929.88",
     "1627046151531.67",
     "1627046152085.13",
     "1627046153392.43"
 ]
+
+SEGMENT_IDS_SUCHIT = [
+    "1627046153803.69",
+    "1627046153934.85",
+    "1627046154089.68",
+    "1627046154277.15"
+]
+
 SEGMENT_URL_WARC = "https://commoncrawl.s3.amazonaws.com/crawl-data/CC-MAIN-2021-31/warc.paths.gz"
 SEGMENT_URL_DOMAIN = "https://commoncrawl.s3.amazonaws.com/"
 SEGMENT_FILE_WARC = "../data/segments/warc.paths"

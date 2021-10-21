@@ -68,8 +68,8 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
 
 
 def _test():
-    wrc_path = "../data/segments/CC-MAIN-20210723143921-20210723173921-00258.warc.gz"
-    segment_id = "1627046149929.88"
+    wrc_path = "../data/segments/CC-MAIN-20210728220634-20210729010634-00000.warc"
+    segment_id = "1627046153803.69"
     samples = extract(wrc_path, segment_id, limit=10000)
     utils.export_csv(samples, config.CSV_FILE_SAMPLES)
 

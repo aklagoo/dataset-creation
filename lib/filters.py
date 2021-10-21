@@ -6,6 +6,9 @@ from nltk.tokenize import word_tokenize
 from lib import config
 from numpy import ndarray
 from typing import List
+from open_nsfw_python3 import NSFWClassifier # pip install open_nsfw_python3
+
+sexual_classifier = NSFWClassifier()
 
 
 def filter_text_len(img_alt: str, img_par: str) -> (bool, bool):
@@ -30,3 +33,11 @@ def filter_match_classes(classes: List[str], img_alt: str, img_par: str) -> (boo
 def filter_text_english(img_alt: str, img_par: str) -> (bool, bool):
     """Checks if alt-text and par-text contain at least some English words."""
     return True, True
+
+def filter_sexual_content(img_path: str) -> bool:
+    """Checks if an image contains sexual content"""
+    score = sexual_classifier.get_score('image.jpg')
+    if score > 0.5:
+        return True
+
+
