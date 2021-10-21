@@ -5,6 +5,10 @@ import torchvision
 from torchvision import transforms
 from lib.detect import _predict
 from lib.filters import filter_text_len, filter_text_english
+from lib.utils import download_urllib
+import os
+from lib import config
+import json
 
 
 _device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -46,6 +50,26 @@ def filter_text(samples: List[dict]) -> List[dict]:
     return _samples
 
 
+def download(samples: List[dict]) -> List[dict]:
+    """Downloads images for all tags. Discards tags with invalid URLs."""
+    _samples = []
+    for sample in samples:
+        _sample = sample.copy()
+
+        # Generate file path
+        url = _sample['img_url']
+        ext = '.' + url.split('.')[-1]
+        path = os.path.join(config.IMG_DIR_BASE, _sample['img_uuid'] + ext)
+
+        # Check if image has been downloaded
+        exists, path = download_urllib(url, path)
+        if path:
+            _sample['img_path'] = path
+            _samples.append(_sample)
+
+    return samples
+
+
 def detect(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """Loads and tags images."""
     _samples = []
@@ -54,16 +78,11 @@ def detect(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
 
         # Predict classes and bounding boxes for image
         classes, labels, boxes = _predict(cv2.imread(_sample['img_path']), _model, _device, 0.8, _transform)
-        _sample['classes'] = ' '.join(list(set(classes)))
+        _sample['classes'] = json.dumps(classes)
+        _sample['boxes'] = json.dumps(boxes)
         _samples.append(_sample)
 
     return _samples
-
-
-def download(samples: List[dict]) -> List[dict]:
-    """Downloads images for all tags. Discards tags with invalid URLs."""
-    # TODO Fill stub
-    return samples
 
 
 def filter_img(tags: List[dict]) -> List[dict]:
