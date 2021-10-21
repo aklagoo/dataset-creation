@@ -32,14 +32,16 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
     Args:
         warc_path: Path to the .warc file.
         warc_segment_id: .warc file's segment ID.
-        samples: List of image data previously processed, if any.
+        _samples: List of image data previously processed, if any.
         limit: Soft limits the number of image tags processed.
     Returns:
         images: List of image dictionaries with keys:
             'img_uuid', 'img_url', 'img_path', 'img_caption', 'warc_segment_id', 'warc_path', 'warc_url'
     """
     if not samples:
-        samples = []
+        _samples = []
+    else:
+        _samples = samples.copy()
 
     with open(warc_path, 'rb') as stream:
         for i, record in enumerate(ArchiveIterator(stream)):
@@ -51,7 +53,7 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
                     image_uuid = uuid.uuid4()
 
                     # Append to warc_images
-                    samples.append({
+                    _samples.append({
                         'img_uuid': str(image_uuid),
                         'img_url': image['src'],
                         'img_caption': image['alt'],
@@ -62,9 +64,9 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
                     })
             except UnicodeDecodeError:
                 pass
-            if len(samples) > limit != -1:
+            if len(_samples) > limit != -1:
                 break
-    return samples
+    return _samples
 
 
 def _test():
