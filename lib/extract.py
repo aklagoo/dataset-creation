@@ -1,5 +1,5 @@
 from urllib.parse import urlparse
-
+from tqdm import tqdm
 from warcio.archiveiterator import ArchiveIterator
 from bs4 import BeautifulSoup
 import uuid
@@ -47,7 +47,7 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
         _samples = samples.copy()
 
     with open(warc_path, 'rb') as stream:
-        for i, record in enumerate(ArchiveIterator(stream)):
+        for i, record in enumerate(tqdm(ArchiveIterator(stream))):
             try:
                 # Get URL
                 url = record.rec_headers.get_header('WARC-Target-URI')
@@ -82,7 +82,7 @@ def _test():
     wrc_path = "../data/segments/CC-MAIN-20210723143921-20210723173921-00258.warc.gz"
     segment_id = "1627046149929.88"
     samples = extract(wrc_path, segment_id, limit=10000)
-    utils.export_csv(samples, config.CSV_FILE_SAMPLES)
+    utils.export_csv(samples, config.CSV_DIR_SAMPLES)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 """This module contains several methods to filter tags.
 
-All methods return a boolean.
+All filters return one or more booleans.
 """
 from nltk.tokenize import word_tokenize
 from nltk.corpus import words
@@ -33,9 +33,13 @@ domain_blacklist = _generate_blacklist(config.FILTER_URL_BLACKLIST_DIR)
 
 def filter_text_len(img_alt: str, img_par: str) -> (bool, bool):
     """Checks if length of alt-text and par-text is greater than the minimum length."""
+    if config.TEXT_DROP_BIG:
+        if len(img_alt) > config.TEXT_DROP_BIG_LEN or len(img_par) > config.TEXT_DROP_BIG_LEN:
+            return False, False
+
     alt_len = len(word_tokenize(img_alt))
     par_len = len(word_tokenize(img_par))
-    return alt_len > config.FILTER_TEXT_LEN,  par_len > config.FILTER_TEXT_LEN
+    return alt_len > config.FILTER_TEXT_MIN_LEN, par_len > config.FILTER_TEXT_MIN_LEN
 
 
 def filter_img_shape(img: ndarray) -> bool:

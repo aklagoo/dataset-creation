@@ -14,8 +14,7 @@ SEGMENT_URL_WARC = "https://commoncrawl.s3.amazonaws.com/crawl-data/CC-MAIN-2021
 SEGMENT_URL_DOMAIN = "https://commoncrawl.s3.amazonaws.com/"
 SEGMENT_FILE_WARC = os.path.join(BASE_DIR, "data/segments/warc.paths")
 
-CSV_FILE_SAMPLES = os.path.join(BASE_DIR, "data/csv/samples.csv")
-CSV_FILE_CLASSES = os.path.join(BASE_DIR, "data/csv/classes.csv")
+CSV_DIR_SAMPLES = os.path.join(BASE_DIR, "data/csv")
 
 IMG_DIR_BASE = os.path.join(BASE_DIR, "data/img/base")
 IMG_DIR_TAGGED = os.path.join(BASE_DIR, "data/img/tagged")
@@ -36,9 +35,12 @@ DETECT_COCO_NAMES = [
     'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'hair brush'
 ]
 
-FILTER_TEXT_LEN = 10
+FILTER_TEXT_MIN_LEN = 10
 FILTER_IMG_SIZE = (50, 50)
 FILTER_MIN_SIMILARITY = 0.7
 FILTER_TEXT_EN_LEN = 8
 FILTER_URL_BLACKLIST_DIR = os.path.join(BASE_DIR, 'data/blacklists')
 FILTER_MIN_NSFW = 0.5
+
+TEXT_DROP_BIG = True
+TEXT_DROP_BIG_LEN = 500

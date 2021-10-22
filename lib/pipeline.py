@@ -10,6 +10,7 @@ import os
 from lib import config
 import json
 from urllib.parse import urlparse, urljoin
+from tqdm import tqdm
 
 
 _device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -23,7 +24,7 @@ _transform = transforms.Compose([
 def filter_text(samples: List[dict]) -> List[dict]:
     """Checks if par and alt are valid. Discards otherwise."""
     _samples = []
-    for sample in samples:
+    for sample in tqdm(samples):
         _sample = sample.copy()
 
         alt = _sample['img_alt']
@@ -54,7 +55,7 @@ def filter_text(samples: List[dict]) -> List[dict]:
 def download(samples: List[dict]) -> List[dict]:
     """Downloads images for all tags. Discards tags with invalid URLs."""
     _samples = []
-    for sample in samples:
+    for sample in tqdm(samples):
         _sample = sample.copy()
 
         # Generate file path
@@ -88,7 +89,7 @@ def download(samples: List[dict]) -> List[dict]:
 def detect_and_filter_img(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """Detects and filters images."""
     _samples = []
-    for sample in samples:
+    for sample in tqdm(samples):
         _sample = sample.copy()
 
         # Load and check image size
