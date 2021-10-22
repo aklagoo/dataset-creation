@@ -18,7 +18,7 @@ def get_urls() -> List[Tuple[str, str]]:
 
             # Download to a temporary directory and extract.
             path_gz = os.path.join(tempdir, 'warc.paths.gz')
-            path_gz = utils.download_urllib(config.SEGMENT_URL_WARC, path_gz)
+            _, path_gz = utils.download_urllib(config.SEGMENT_URL_WARC, path_gz)
 
             # Filter URLs by segment IDs and write to file
             with gzip.open(path_gz, 'r') as file_gz, open(config.SEGMENT_FILE_WARC, 'w') as file_warc:
@@ -70,10 +70,13 @@ def download_rand_new() -> (str, str):
     files_exist = [x.split('/')[-1] for x in glob.glob(config.SEGMENT_DIR)]
 
     while True:
-        url = choice(filtered_urls)
-        segment_id = url[0]
-        file_name = url[1].split('/')[-1]
+        random_idx = choice(range(len(filtered_urls)))
+        entry = filtered_urls[random_idx]
+        segment_id = entry[0]
+        url = entry[1]
+        file_name = url.split('/')[-1]
         if file_name not in files_exist:
+            print(file_name)
             _, file = utils.download_wget(url, config.SEGMENT_DIR)
             return segment_id, file
 

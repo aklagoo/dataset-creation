@@ -9,9 +9,26 @@ from lib import config
 from numpy import ndarray
 from typing import List
 from itertools import product
+from nudenet import NudeClassifier
+import os
 
 
+def _generate_blacklist(blacklist_folder: str) -> set:
+    """Generates a dictionary with all blacklisted domains"""
+    print("Collecting list of blacklisted domains")
+    blocked_list = []
+    for blacklist_file in os.listdir(blacklist_folder):
+        with open(os.path.join(blacklist_folder, blacklist_file)) as f:
+            lines = f.readlines()
+            for l in lines:
+                blocked_list.append(l[:-1])
+
+    return set(blocked_list)
+
+
+sexual_classifier = NudeClassifier()
 dictionary = set(words.words())
+domain_blacklist = _generate_blacklist(config.FILTER_URL_BLACKLIST_DIR)
 
 
 def filter_text_len(img_alt: str, img_par: str) -> (bool, bool):
@@ -40,21 +57,29 @@ def filter_match_classes(classes: List[str], img_alt: str, img_par: str) -> (boo
 
     # Check if any pair of words is similar for alt-text
     alt_match = False
-    for x, y in class_alt:
-        x_syn = wn.synset(x)
-        y_syn = wn.synset(y)
-        if x_syn.path_similarity(y_syn) >= config.FILTER_MIN_SIMILARITY:
-            alt_match = True
-            break
+    for c, a in class_alt:
+        print(c)
+        x_syns = wn.synsets(c)
+        y_syns = wn.synsets(a)
 
-    # Check if any pair of words is similar for alt-text
+        # Get synset-synset product
+        for x_syn, y_syn in product(x_syns, y_syns):
+            if x_syn.path_similarity(y_syn) >= config.FILTER_MIN_SIMILARITY:
+                alt_match = True
+                break
+
+    # Check if any pair of words is similar for par-text
     par_match = False
-    for x, y in class_par:
-        x_syn = wn.synset(x)
-        y_syn = wn.synset(y)
-        if x_syn.path_similarity(y_syn) >= config.FILTER_MIN_SIMILARITY:
-            par_match = True
-            break
+    for c, a in class_par:
+        print(c)
+        x_syns = wn.synsets(c)
+        y_syns = wn.synsets(a)
+
+        # Get synset-synset product
+        for x_syn, y_syn in product(x_syns, y_syns):
+            if x_syn.path_similarity(y_syn) >= config.FILTER_MIN_SIMILARITY:
+                par_match = True
+                break
 
     return alt_match, par_match
 
@@ -72,3 +97,17 @@ def filter_text_english(img_alt: str, img_par: str) -> (bool, bool):
     par_count = sum([x in dictionary for x in par_words])
 
     return alt_count >= config.FILTER_TEXT_EN_LEN, par_count >= config.FILTER_TEXT_EN_LEN
+
+
+def filter_sexual_content(img_path: str) -> bool:
+    """Checks if an image does not contain sexual content."""
+    score = sexual_classifier.classify(img_path)[img_path]['unsafe']
+    if score >= config.FILTER_MIN_NSFW:
+        return False
+    return True
+
+
+def filter_blacklisted_domains(domain: str) -> bool:
+    """Checks if a domain does not belong to the list of blacklisted domains."""
+    if domain not in domain_blacklist:
+        return True

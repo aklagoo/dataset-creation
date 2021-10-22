@@ -26,14 +26,14 @@ def _predict(image: np.ndarray, model: torch.nn.Module, device: torch.device, de
     image = image.unsqueeze(0)
     outputs = model(image)
 
-    # Extract labels
-    classes = outputs[0]['labels'].cpu().numpy()
-    labels = [config.DETECT_COCO_NAMES[label] for label in classes]
-
     # Extract bounding boxes
     boundaries = outputs[0]['boxes'].detach().cpu().numpy()
     scores = outputs[0]['scores'].detach().cpu().numpy()
     boxes = boundaries[scores >= detection_threshold].astype(np.int32)
+
+    # Extract labels
+    classes = outputs[0]['labels'].cpu().numpy()[scores >= detection_threshold]
+    labels = [config.DETECT_COCO_NAMES[label] for label in classes]
 
     return classes, labels, boxes
 

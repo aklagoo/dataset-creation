@@ -9,6 +9,7 @@ from lib.utils import download_urllib
 import os
 from lib import config
 import json
+from urllib.parse import urlparse, urljoin
 
 
 _device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -59,15 +60,29 @@ def download(samples: List[dict]) -> List[dict]:
         # Generate file path
         url = _sample['img_url']
         ext = '.' + url.split('.')[-1]
+        if ext.lower() not in config.IMG_ALLOWED_EXT:
+            continue
         path = os.path.join(config.IMG_DIR_BASE, _sample['img_uuid'] + ext)
 
         # Check if image has been downloaded
-        exists, path = download_urllib(url, path)
-        if path:
-            _sample['img_path'] = path
-            _samples.append(_sample)
+        try:
+            exists, path = download_urllib(url, path)
+            if path:
+                _sample['img_path'] = path
+                _samples.append(_sample)
 
-    return samples
+        except ValueError:
+            domain = urlparse(url).netloc
+            url = urljoin(domain, url)
+            try:
+                exists, path = download_urllib(url, path)
+                if path:
+                    _sample['img_path'] = path
+                    _samples.append(_sample)
+            except ValueError:
+                pass
+
+    return _samples
 
 
 def detect_and_filter_img(samples: List[Dict[str, str]]) -> List[Dict[str, str]]:
@@ -81,23 +96,27 @@ def detect_and_filter_img(samples: List[Dict[str, str]]) -> List[Dict[str, str]]
         if not filters.filter_img_shape(img):
             continue
 
+        # Check NSFW content
+        if not filters.filter_sexual_content(_sample['img_path']):
+            continue
+
         # Predict classes and boxes
-        classes, labels, boxes = _predict(cv2.imread(_sample['img_path']), _model, _device, 0.8, _transform)
-        if len(classes) == 0:
+        classes, labels, boxes = _predict(img, _model, _device, 0.8, _transform)
+        if len(labels) == 0:
             continue
 
         # Check if the alt-text and par-text match the classes
         alt = _sample['img_alt']
         par = _sample['img_par']
-        alt_match, par_match = filters.filter_match_classes(classes, alt, par)
+        alt_match, par_match = filters.filter_match_classes(labels, alt, par)
         if not alt_match and not par_match:
             continue
 
         # Append sample
         _sample['FLAG_ALT_MATCH'] = alt_match
         _sample['FLAG_PAR_MATCH'] = par_match
-        _sample['classes'] = json.dumps(classes)
-        _sample['boxes'] = json.dumps(boxes)
+        _sample['classes'] = json.dumps(labels)
+        _sample['boxes'] = json.dumps(boxes.tolist())
         _samples.append(_sample)
 
     return _samples

@@ -1,8 +1,11 @@
+from urllib.parse import urlparse
+
 from warcio.archiveiterator import ArchiveIterator
 from bs4 import BeautifulSoup
 import uuid
 from lib import config
 from lib import utils
+from lib.filters import filter_blacklisted_domains
 from typing import List
 
 
@@ -46,6 +49,12 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
     with open(warc_path, 'rb') as stream:
         for i, record in enumerate(ArchiveIterator(stream)):
             try:
+                # Get URL
+                url = record.rec_headers.get_header('WARC-Target-URI')
+                domain = urlparse(url).netloc
+                if not filter_blacklisted_domains(domain):
+                    continue
+
                 # Parse page
                 warc_images = _parse(record.content_stream().read().decode("utf-8"))
                 for image in warc_images:
@@ -56,11 +65,11 @@ def extract(warc_path: str, warc_segment_id: str, samples: list = None, limit: i
                     _samples.append({
                         'img_uuid': str(image_uuid),
                         'img_url': image['src'],
-                        'img_caption': image['alt'],
-                        'img_paragraph': image['par'],
+                        'img_alt': image['alt'],
+                        'img_par': image['par'],
                         'warc_segment_id': warc_segment_id,
                         'warc_path': warc_path,
-                        'warc_url': record.rec_headers.get_header('WARC-Target-URI')
+                        'warc_url': url
                     })
             except UnicodeDecodeError:
                 pass
