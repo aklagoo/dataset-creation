@@ -62,7 +62,6 @@ def filter_match_classes(classes: List[str], img_alt: str, img_par: str) -> (boo
     # Check if any pair of words is similar for alt-text
     alt_match = False
     for c, a in class_alt:
-        print(c)
         x_syns = wn.synsets(c)
         y_syns = wn.synsets(a)
 
@@ -75,7 +74,6 @@ def filter_match_classes(classes: List[str], img_alt: str, img_par: str) -> (boo
     # Check if any pair of words is similar for par-text
     par_match = False
     for c, a in class_par:
-        print(c)
         x_syns = wn.synsets(c)
         y_syns = wn.synsets(a)
 

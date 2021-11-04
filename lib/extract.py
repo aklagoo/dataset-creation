@@ -24,8 +24,11 @@ def _parse(content: str) -> List[dict]:
     for tag in tags:
         src = tag['src']
         alt = tag['alt']
-        par = tag.parent.getText()
-        samples.append({'src': src, 'alt': alt, 'par': par})
+        try:
+            par = tag.parent.getText()
+            samples.append({'src': src, 'alt': alt, 'par': par})
+        except:
+            pass
     return samples
 
 

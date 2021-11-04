@@ -1,8 +1,8 @@
 from typing import List, Dict
 import cv2
-import torch
 import torchvision
 from torchvision import transforms
+from lib.config import DETECT_DEVICE
 from lib.detect import _predict
 from lib import filters
 from lib.utils import download_urllib
@@ -12,10 +12,8 @@ import json
 from urllib.parse import urlparse, urljoin
 from tqdm import tqdm
 
-
-_device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 _model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
-_model.eval().to(_device)
+_model.eval().to(DETECT_DEVICE)
 _transform = transforms.Compose([
     transforms.ToTensor(),
 ])
@@ -72,7 +70,8 @@ def download(samples: List[dict]) -> List[dict]:
                 _sample['img_path'] = path
                 _samples.append(_sample)
 
-        except ValueError:
+        # except ValueError:
+        except:
             domain = urlparse(url).netloc
             url = urljoin(domain, url)
             try:
@@ -90,35 +89,38 @@ def detect_and_filter_img(samples: List[Dict[str, str]]) -> List[Dict[str, str]]
     """Detects and filters images."""
     _samples = []
     for sample in tqdm(samples):
-        _sample = sample.copy()
+        try:
+            _sample = sample.copy()
 
-        # Load and check image size
-        img = cv2.imread(_sample['img_path'])
-        if not filters.filter_img_shape(img):
-            continue
+            # Load and check image size
+            img = cv2.imread(_sample['img_path'])
+            if not filters.filter_img_shape(img):
+                continue
 
-        # Check NSFW content
-        if not filters.filter_sexual_content(_sample['img_path']):
-            continue
+            # Check NSFW content
+            if not filters.filter_sexual_content(_sample['img_path']):
+                continue
 
-        # Predict classes and boxes
-        classes, labels, boxes = _predict(img, _model, _device, 0.8, _transform)
-        if len(labels) == 0:
-            continue
+            # Predict classes and boxes
+            classes, labels, boxes = _predict(img, _model, DETECT_DEVICE, 0.8, _transform)
+            if len(labels) == 0:
+                continue
 
-        # Check if the alt-text and par-text match the classes
-        alt = _sample['img_alt']
-        par = _sample['img_par']
-        alt_match, par_match = filters.filter_match_classes(labels, alt, par)
-        if not alt_match and not par_match:
-            continue
+            # Check if the alt-text and par-text match the classes
+            alt = _sample['img_alt']
+            par = _sample['img_par']
+            alt_match, par_match = filters.filter_match_classes(labels, alt, par)
+            if not alt_match and not par_match:
+                continue
 
-        # Append sample
-        _sample['FLAG_ALT_MATCH'] = alt_match
-        _sample['FLAG_PAR_MATCH'] = par_match
-        _sample['classes'] = json.dumps(labels)
-        _sample['boxes'] = json.dumps(boxes.tolist())
-        _samples.append(_sample)
+            # Append sample
+            _sample['FLAG_ALT_MATCH'] = alt_match
+            _sample['FLAG_PAR_MATCH'] = par_match
+            _sample['classes'] = json.dumps(labels)
+            _sample['boxes'] = json.dumps(boxes.tolist())
+            _samples.append(_sample)
+        except:
+            pass
 
     return _samples
 
