@@ -12,6 +12,6 @@ The library uses PyTorch, gzip, numpy, warcio, BeautifulSoup4, NLTK, NudeNet, Op
 
 ## How-to
 After installing the required libraries, run:
-```python main.py```
+  python main.py
 
 To configure download and filtering parameters, modify parameters in `lib/config.py`
