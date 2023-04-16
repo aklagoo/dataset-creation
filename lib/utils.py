@@ -3,7 +3,7 @@ import pandas as pd
 from typing import List
 import os.path
 from urllib.request import urlopen
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 import wget
 from lib import config
 
@@ -50,19 +50,15 @@ def download_urllib(url: str, file_path: str = None, dir_path: str = None, verbo
         if verbose:
             print(f"[SUCCESS] '{filename}' downloaded.")
         return exists, file_path
-    # except URLError:
-    except:
+
+    except HTTPError as e:
         if verbose:
             print(f"[ERROR] Unable to download '{filename}'.")
         return exists, None
-    #except timeout:
-    #    if verbose:
-    #        print(f"[ERROR] Timeout while downloading '{filename}'.")
-    #    return exists, None
-    #except KeyError:
-    #    if verbose:
-    #        print(f"[ERROR] Skipping '{filename}'. Could not find header \"Content-Length\".")
-    #    return exists, None
+
+    except TimeoutError as e:
+        if verbose:
+            print(f"[ERROR] Unable to except ")
 
 
 def download_wget(url: str, dir_path: str = None, verbose: bool = False) -> (bool, str):

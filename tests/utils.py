@@ -19,29 +19,30 @@ class UtilsDownloadFile(unittest.TestCase):
     TEXT_CUSTOM = b'Hello world!'
 
     def test_404(self):
-        res = download_urllib(self.URL_INVALID)
-        self.assertIsNone(res, "should return None when 404.")
+        res, path = download_urllib(self.URL_INVALID)
+        self.assertFalse(res, "should return None when 404.")
 
     def test_200(self):
-        res = download_urllib(self.URL_VALID)
-        self.assertIsInstance(res, str, "should return type 'str' when 200.")
-        _remove(res)
+        res, path = download_urllib(self.URL_VALID)
+        print(res, path)
+        self.assertIsInstance(path, str, "should return type 'str' when 200.")
+        _remove(path)
 
     def test_file_create(self):
-        res = download_urllib(self.URL_VALID)
-        self.assertTrue(os.path.exists(res), "should create a file.")
-        _remove(res)
+        res, path = download_urllib(self.URL_VALID)
+        self.assertTrue(os.path.exists(path), "should create a file.")
+        _remove(path)
 
     def test_file_path_default(self):
-        res = download_urllib(self.URL_VALID)
-        self.assertEqual(res, self.FILENAME_DEFAULT, "should extract the correct filename from the URL.")
-        _remove(res)
+        res, path = download_urllib(self.URL_VALID)
+        self.assertEqual(path, self.FILENAME_DEFAULT, "should extract the correct filename from the URL.")
+        _remove(path)
 
     def test_file_path_specified(self):
         with tempfile.TemporaryDirectory() as tempdir:
             path = os.path.join(tempdir, self.FILENAME_CUSTOM)
-            res = download_urllib(self.URL_VALID, path)
-            self.assertTrue(os.path.exists(res), "should create a file at the specified path.")
+            res, path = download_urllib(self.URL_VALID, path)
+            self.assertTrue(os.path.exists(path), "should create a file at the specified path.")
 
     def test_dir_path(self):
         with tempfile.TemporaryDirectory() as tempdir:
