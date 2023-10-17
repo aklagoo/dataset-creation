@@ -82,6 +82,7 @@ class SampleFormatException(Exception):
                     Incorrect types: {self._stats['par_incorrect_type']}
             """
 
+
 def _parse(content: str) -> List[dict]:
     """Extracts image lib-alt-par dictionaries.
 
